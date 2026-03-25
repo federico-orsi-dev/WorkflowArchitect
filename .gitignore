@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.cache/
+
+# Environment
+.env
+.env.local
+
+# Node.js
+node_modules/
+/dist
+.eslintcache
+.vscode/
+
+# Project Specific
+local_storage_mock/
+db.sqlite3
+*.db
+
+# OS
+.DS_Store
+Thumbs.db
