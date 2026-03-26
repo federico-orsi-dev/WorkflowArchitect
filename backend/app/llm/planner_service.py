@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-from typing import Any
 
 from app.core.settings import settings
 from app.llm.client_factory import create_client
