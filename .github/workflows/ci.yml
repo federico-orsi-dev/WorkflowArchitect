@@ -1,0 +1,57 @@
+name: CI-Quality-Gate
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop, master, main ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+  WORKDIR: backend
+
+jobs:
+  quality-gate:
+    name: Build & Verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ${{ env.WORKDIR }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          # Nota: In futuro usa uv.lock per massima precisione
+          cache-dependency-glob: "${{ env.WORKDIR }}/requirements*.txt"
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Install Dependencies
+        run: |
+          uv venv .venv
+          uv pip install --python .venv/bin/python -r requirements.txt -r requirements-dev.txt
+
+      - name: Static Analysis (Lint, Format, Typing)
+        run: |
+          .venv/bin/ruff check . --output-format=github
+          .venv/bin/ruff format --check .
+          .venv/bin/mypy . --ignore-missing-imports
+
+      - name: Security Scan
+        run: .venv/bin/bandit -r app -ll
+
+      - name: Unit & Integration Tests
+        env:
+          OPENAI_API_KEY: "sk-mock-123"
+        run: .venv/bin/pytest -q
