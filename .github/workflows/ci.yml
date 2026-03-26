@@ -2,9 +2,9 @@ name: CI-Quality-Gate
 
 on:
   push:
-    branches: [ develop ]
+    branches: [develop]
   pull_request:
-    branches: [ develop, master, main ]
+    branches: [develop, master, main]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -30,26 +30,22 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          # Fondamentale: usiamo il lockfile per un caching deterministico
-          cache-dependency-glob: "${{ env.WORKDIR }}/uv.lock"
+          cache-dependency-glob: "**/uv.lock"
 
       - name: Set up Python
         run: uv python install ${{ env.PYTHON_VERSION }}
 
       - name: Install Dependencies
-        # 'uv sync' è più veloce e pulito di 'uv pip install'
-        run: uv sync --all-groups
+        run: uv sync --frozen --all-groups
 
       - name: Static Analysis (Lint, Format, Typing)
-        # Usiamo 'uv run' per garantire l'isolamento dell'ambiente
         run: |
           uv run ruff check . --output-format=github
           uv run ruff format --check .
           uv run mypy . --ignore-missing-imports
 
       - name: Security Scan
-        # Escludiamo .venv esplicitamente per evitare loop infiniti
-        run: uv run bandit -r . -x .venv,tests -ll
+        run: uv run bandit -r app -ll
 
       - name: Unit & Integration Tests
         env:
