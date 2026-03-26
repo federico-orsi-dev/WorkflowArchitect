@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 CONVENTIONAL_COMMIT_PATTERN = (
     r"^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)"
-    r"(\([a-z0-9._-]+\))?!?: .+"
+    r"(\([a-zA-Z0-9._-]+\))?!?: .+"
 )
 
 
@@ -76,9 +76,7 @@ class PullRequestResult(BaseModel):
         body_lower = self.pr_body_markdown.lower()
         required_sections = ["why", "what", "how to test"]
         if not all(section in body_lower for section in required_sections):
-            raise ValueError(
-                "pr_body_markdown must include Why, What, and How to test sections."
-            )
+            raise ValueError("pr_body_markdown must include Why, What, and How to test sections.")
         return self
 
 

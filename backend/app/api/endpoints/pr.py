@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from app.services.pr_service import PullRequestService
 from app.schemas.pr import PullRequestRequest, PullRequestResponse
+from app.services.pr_service import PullRequestService
 
 router = APIRouter()
 service = PullRequestService()

@@ -26,7 +26,9 @@ class PullRequestService:
             body_lines = "\n".join([f"- {message}" for message in commit_messages]) or "- N/A"
             return PullRequestResult(
                 pr_title="Aggregate changes",
-                pr_body_markdown=f"### Why\nN/A\n\n### What\n{body_lines}\n\n### How to test\n- N/A",
+                pr_body_markdown=(
+                    f"### Why\nN/A\n\n### What\n{body_lines}\n\n### How to test\n- N/A"
+                ),
                 changelog_entry="Changed: aggregate updates across multiple commits.",
                 labels=labels,
             )

@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 CONVENTIONAL_COMMIT_PATTERN = (
     r"^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)"
-    r"(\([a-z0-9._-]+\))?!?: .+"
+    r"(\([a-zA-Z0-9._-]+\))?!?: .+"
 )
 
 
@@ -34,9 +34,7 @@ class CommitRequest(BaseModel):
     def normalize_message(cls, value: str) -> str:
         normalized = value.strip()
         if len(normalized) < 5:
-            raise ValueError(
-                "message must contain at least 5 non-whitespace characters."
-            )
+            raise ValueError("message must contain at least 5 non-whitespace characters.")
         return normalized
 
     @model_validator(mode="after")

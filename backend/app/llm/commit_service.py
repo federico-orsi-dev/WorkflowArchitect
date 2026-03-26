@@ -14,17 +14,26 @@ class CommitService:
     def __init__(self) -> None:
         self.client = create_client(settings)
 
-    def run(self, message: str, plan_id: str | None = None, task_id: str | None = None) -> CommitResult:
+    def run(
+        self,
+        message: str,
+        plan_id: str | None = None,
+        task_id: str | None = None,
+    ) -> CommitResult:
         if not self.client:
             result = CommitResult(
                 commit_message="chore: add placeholder message",
                 pr_title="CommitSense fallback",
-                pr_body_markdown="### Why\nNo client configured.\n\n### What\nN/A\n\n### How to test\nN/A",
+                pr_body_markdown=(
+                    "### Why\nNo client configured.\n\n### What\nN/A\n\n### How to test\nN/A"
+                ),
                 changelog_entry="Changed: placeholder commit response.",
                 labels=["chore"],
             )
             if plan_id or task_id:
-                return result.model_copy(update={"plan_id": plan_id, "task_id": task_id})
+                return result.model_copy(
+                    update={"plan_id": plan_id, "task_id": task_id},
+                )
             return result
 
         schema_hint = json.dumps(
