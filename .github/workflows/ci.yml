@@ -22,7 +22,6 @@ jobs:
     defaults:
       run:
         working-directory: ${{ env.WORKDIR }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -31,27 +30,28 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          # Nota: In futuro usa uv.lock per massima precisione
-          cache-dependency-glob: "${{ env.WORKDIR }}/requirements*.txt"
+          # Fondamentale: usiamo il lockfile per un caching deterministico
+          cache-dependency-glob: "${{ env.WORKDIR }}/uv.lock"
 
       - name: Set up Python
         run: uv python install ${{ env.PYTHON_VERSION }}
 
       - name: Install Dependencies
-        run: |
-          uv venv .venv
-          uv pip install --python .venv/bin/python -r requirements.txt -r requirements-dev.txt
+        # 'uv sync' è più veloce e pulito di 'uv pip install'
+        run: uv sync --all-groups
 
       - name: Static Analysis (Lint, Format, Typing)
+        # Usiamo 'uv run' per garantire l'isolamento dell'ambiente
         run: |
-          .venv/bin/ruff check . --output-format=github
-          .venv/bin/ruff format --check .
-          .venv/bin/mypy . --ignore-missing-imports
+          uv run ruff check . --output-format=github
+          uv run ruff format --check .
+          uv run mypy . --ignore-missing-imports
 
       - name: Security Scan
-        run: .venv/bin/bandit -r app -ll
+        # Escludiamo .venv esplicitamente per evitare loop infiniti
+        run: uv run bandit -r . -x .venv,tests -ll
 
       - name: Unit & Integration Tests
         env:
           OPENAI_API_KEY: "sk-mock-123"
-        run: .venv/bin/pytest -q
+        run: uv run pytest -q
