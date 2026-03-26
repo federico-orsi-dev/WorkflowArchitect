@@ -17,16 +17,18 @@ class PullRequestService:
     def run(self, commits: list[CommitSummary]) -> PullRequestResult:
         commit_lines: list[str] = []
         for index, commit in enumerate(commits, start=1):
-            labels = ", ".join(commit.labels) if commit.labels else "none"
-            commit_lines.append(f"{index}. {commit.commit_message} (labels: {labels})")
+            label_text = ", ".join(commit.labels) if commit.labels else "none"
+            commit_lines.append(f"{index}. {commit.commit_message} (labels: {label_text})")
 
         if not self.client:
             commit_messages = [commit.commit_message for commit in commits]
-            labels = _merge_labels([], commits)
+            labels: list[str] = _merge_labels([], commits)
             body_lines = "\n".join([f"- {message}" for message in commit_messages]) or "- N/A"
             return PullRequestResult(
                 pr_title="Aggregate changes",
-                pr_body_markdown=f"### Why\nN/A\n\n### What\n{body_lines}\n\n### How to test\n- N/A",
+                pr_body_markdown=(
+                    f"### Why\nN/A\n\n### What\n{body_lines}\n\n### How to test\n- N/A"
+                ),
                 changelog_entry="Changed: aggregate updates across multiple commits.",
                 labels=labels,
             )
@@ -51,14 +53,17 @@ class PullRequestService:
         )
         full_prompt = f"{PR_AGGREGATION_SYSTEM_PROMPT}\n\n{user_prompt}"
         tracer = get_tracer(settings.enable_tracing)
+        client = self.client
+        if client is None:
+            raise RuntimeError("Client not initialized")
 
         with tracer.trace("pr"):
-            response_text = self.client.invoke(full_prompt, settings.llm_timeout_seconds)
+            response_text = client.invoke(full_prompt, settings.llm_timeout_seconds)
 
         def retry_fn(retry_message: str) -> str:
             retry_prompt = f"{PR_AGGREGATION_SYSTEM_PROMPT}\n\n{retry_message}\n\n{user_prompt}"
             with tracer.trace("pr"):
-                return self.client.invoke(retry_prompt, settings.llm_timeout_seconds)
+                return client.invoke(retry_prompt, settings.llm_timeout_seconds)
 
         payload = parse_json_strict(response_text, schema_hint, retry_fn=retry_fn)
         result = PullRequestResult.model_validate(payload)

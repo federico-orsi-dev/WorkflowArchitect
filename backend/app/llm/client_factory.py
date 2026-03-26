@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FutureTimeout
 from dataclasses import dataclass
 from typing import Any
 
@@ -30,7 +31,7 @@ def create_client(settings: Settings) -> LlmClient | None:
         return None
 
     try:
-        from datapizza.clients.openai import OpenAIClient  # type: ignore
+        from datapizza.clients.openai import OpenAIClient
     except ImportError:
         logger.warning("datapizza_missing", reason="openai_client_not_installed")
         return None
