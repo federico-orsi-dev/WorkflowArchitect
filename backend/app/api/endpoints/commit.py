@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from app.services.commit_service import CommitService
 from app.schemas.commit import CommitRequest, CommitResponse
+from app.services.commit_service import CommitService
 
 router = APIRouter()
 service = CommitService()

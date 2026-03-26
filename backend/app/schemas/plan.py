@@ -15,9 +15,7 @@ class PlanRequest(BaseModel):
     def normalize_prompt(cls, value: str) -> str:
         normalized = value.strip()
         if len(normalized) < 5:
-            raise ValueError(
-                "prompt must contain at least 5 non-whitespace characters."
-            )
+            raise ValueError("prompt must contain at least 5 non-whitespace characters.")
         return normalized
 
 
