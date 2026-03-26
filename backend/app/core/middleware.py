@@ -3,9 +3,11 @@ from __future__ import annotations
 import threading
 import time
 import uuid
+from typing import Any, cast
 
 import structlog
 from fastapi.responses import JSONResponse
+from starlette.responses import Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.types import ASGIApp
@@ -16,7 +18,11 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.header_name = header_name
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(
+        self,
+        request: Request,
+        call_next: Any,
+    ) -> Response:
         request_id = request.headers.get(self.header_name) or str(uuid.uuid4())
         structlog.contextvars.bind_contextvars(request_id=request_id)
         try:
@@ -24,7 +30,7 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
         finally:
             structlog.contextvars.clear_contextvars()
         response.headers[self.header_name] = request_id
-        return response
+        return cast(Response, response)
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
@@ -34,7 +40,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self._lock = threading.Lock()
         self._buckets: dict[str, tuple[int, float]] = {}
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(
+        self,
+        request: Request,
+        call_next: Any,
+    ) -> Response:
         client_ip = request.client.host if request.client else "unknown"
         now = time.time()
         window_start = now - 60
@@ -51,4 +61,4 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             structlog.get_logger().warning("rate_limit_exceeded", client_ip=client_ip)
             return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"})
 
-        return await call_next(request)
+        return cast(Response, await call_next(request))

@@ -31,7 +31,7 @@ def create_client(settings: Settings) -> LlmClient | None:
         return None
 
     try:
-        from datapizza.clients.openai import OpenAIClient  # type: ignore
+        from datapizza.clients.openai import OpenAIClient
     except ImportError:
         logger.warning("datapizza_missing", reason="openai_client_not_installed")
         return None

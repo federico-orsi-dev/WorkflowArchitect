@@ -24,6 +24,9 @@ class CommitService:
         schema_hint = json.dumps(
             {
                 "commit_message": "feat(scope): ...",
+                "pr_title": "...",
+                "pr_body_markdown": "### Why...### What...### How to test...",
+                "changelog_entry": "Changed: ...",
                 "labels": ["refactor", "tests"],
             },
             indent=2,
@@ -32,14 +35,17 @@ class CommitService:
         user_prompt = f"Change summary: {message}\n\nSchema:\n{schema_hint}"
         full_prompt = f"{COMMIT_SYSTEM_PROMPT}\n\n{user_prompt}"
         tracer = get_tracer(settings.enable_tracing)
+        client = self.client
+        if client is None:
+            raise RuntimeError("Client not initialized")
 
         with tracer.trace("commit"):
-            response_text = self.client.invoke(full_prompt, settings.llm_timeout_seconds)
+            response_text = client.invoke(full_prompt, settings.llm_timeout_seconds)
 
         def retry_fn(retry_message: str) -> str:
             retry_prompt = f"{COMMIT_SYSTEM_PROMPT}\n\n{retry_message}\n\nChange summary: {message}"
             with tracer.trace("commit"):
-                return self.client.invoke(retry_prompt, settings.llm_timeout_seconds)
+                return client.invoke(retry_prompt, settings.llm_timeout_seconds)
 
         payload = parse_json_strict(response_text, schema_hint, retry_fn=retry_fn)
         return CommitResult.model_validate(payload)

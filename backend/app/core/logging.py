@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import sys
+from typing import cast
 
 import structlog
 
@@ -29,4 +30,4 @@ def configure_logging(log_level: str) -> None:
 
 
 def get_logger() -> structlog.stdlib.BoundLogger:
-    return structlog.get_logger()
+    return cast(structlog.stdlib.BoundLogger, structlog.get_logger())

@@ -51,6 +51,9 @@ class CommitResult(BaseModel):
         max_length=200,
         pattern=CONVENTIONAL_COMMIT_PATTERN,
     )
+    pr_title: str | None = None
+    pr_body_markdown: str | None = None
+    changelog_entry: str | None = None
     labels: list[str] = Field(..., min_length=1, max_length=10)
 
     @field_validator("commit_message")
